@@ -5,50 +5,29 @@ import numpy as np
 import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import make_regression
-from streamlit_lottie import st_lottie
-import requests
 
-# --- App Configuration ---
-st.set_page_config(page_title="FreshScore Predictor", layout="wide")
+# Page settings
+st.set_page_config(page_title="FreshScore AI – ColdChain Monitor", layout="wide")
 
-# --- Lottie Animation Loader ---
-def load_lottieurl(url: str):
-    try:
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except:
-        return None
+# Custom background block style
+def colorful_block(title, color, content):
+    st.markdown(f"""
+        <div style='background-color:{color};padding:20px;border-radius:10px;'>
+        <h3 style='color:white;'>{title}</h3>
+        <p style='color:white;'>{content}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-# --- Load Animation ---
-lottie_json = load_lottieurl("https://lottie.host/f00c9014-fef2-4a44-8ccf-93e5d7d0cc6e/7TBG3gzdcO.json")
+# Page header
+st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🍓 FreshScore Predictor – ColdChain AI</h1>", unsafe_allow_html=True)
+st.markdown("---")
 
-# --- Sidebar Theme Switch ---
-theme = st.sidebar.radio("Choose Theme", ("🌞 Light", "🌙 Dark"))
-
-if theme == "🌙 Dark":
-    bg_color = "#0e1117"
-    text_color = "#FAFAFA"
-    meter_color = "lightgreen"
-else:
-    bg_color = "#ffffff"
-    text_color = "#000000"
-    meter_color = "green"
-
-# --- Header Section ---
-st.markdown(f"<h1 style='color:{text_color}; text-align:center;'>🍓 FreshScore Predictor – ColdChain AI</h1>", unsafe_allow_html=True)
-if lottie_json:
-    st_lottie(lottie_json, height=200, key="coldchain")
-else:
-    st.warning("⚠️ Animation failed to load. Please check your internet or try again later.")
-
-# --- Layout Columns ---
+# Layout
 left, right = st.columns([1, 1.2])
 
 with left:
     with st.form("freshscore_form"):
-        st.subheader("📋 Enter Item Details")
+        st.markdown("<h4>📋 Enter Item Details</h4>", unsafe_allow_html=True)
         category = st.selectbox("Perishable Category", [
             "strawberries", "flowers", "frozen_food", "milk", "vaccines", "cheese",
             "meat", "leafy_greens", "ice_cream", "seafood", "juice", "eggs", "yogurt", "berries", "herbs"
@@ -61,7 +40,6 @@ with left:
         submitted = st.form_submit_button("🚀 Predict FreshScore")
 
 if submitted:
-    # One-hot encode input
     input_data = {
         "temperature": temperature,
         "humidity": humidity,
@@ -77,17 +55,15 @@ if submitted:
 
     input_df = pd.DataFrame([input_data])
 
-    # Train dummy model
     model = RandomForestRegressor(n_estimators=100, random_state=42)
     X_dummy, y_dummy = make_regression(n_samples=1000, n_features=len(input_df.columns), noise=0.1)
     model.fit(X_dummy, y_dummy)
 
-    # Predict
     score = model.predict(input_df)[0]
     score = float(np.clip(score, 0, 100))
 
     with right:
-        st.subheader("🌡️ Freshness Meter")
+        st.markdown("<h4>🌡️ Freshness Meter</h4>", unsafe_allow_html=True)
         fig = go.Figure(go.Indicator(
             mode="gauge+number+delta",
             value=score,
@@ -95,32 +71,25 @@ if submitted:
             title={'text': "FreshScore (0–100)", 'font': {'size': 24}},
             delta={'reference': 80, 'increasing': {'color': "green"}, 'decreasing': {'color': "red"}},
             gauge={
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "gray"},
-                'bar': {'color': meter_color},
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "#FF4B4B"},
                 'steps': [
                     {'range': [0, 60], 'color': 'red'},
                     {'range': [60, 80], 'color': 'yellow'},
                     {'range': [80, 100], 'color': 'lightgreen'}
                 ],
-                'threshold': {
-                    'line': {'color': "black", 'width': 4},
-                    'thickness': 0.75,
-                    'value': score
-                }
+                'threshold': {'line': {'color': "black", 'width': 4}, 'thickness': 0.75, 'value': score}
             }
         ))
         st.plotly_chart(fig)
 
-        # Status feedback
         if score > 80:
-            st.success("✅ Excellent freshness maintained!")
-            st.balloons()
+            colorful_block("✅ Excellent freshness!", "#28a745", "Product is in optimal condition.")
         elif score > 60:
-            st.info("🟡 Acceptable freshness level.")
+            colorful_block("🟡 Acceptable freshness", "#ffc107", "Monitor temperature and transit time.")
         else:
-            st.error("🚨 Spoilage risk! Immediate action recommended.")
+            colorful_block("🚨 Spoilage Risk", "#dc3545", "Inspect or reroute the item immediately.")
 
-        # Explanation block
         st.markdown("""
         ---
         ### 🧾 What Does the FreshScore Mean?
@@ -138,4 +107,3 @@ if submitted:
 
         This score helps cold chain operators, retailers, and quality controllers make **real-time decisions** based on AI-powered predictions.
         """)
-
