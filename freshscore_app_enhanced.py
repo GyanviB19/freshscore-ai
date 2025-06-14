@@ -13,13 +13,16 @@ st.set_page_config(page_title="FreshScore Predictor", layout="wide")
 
 # --- Lottie Animation Loader ---
 def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except:
         return None
-    return r.json()
 
 # --- Load Animation ---
-lottie_json = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_yd9y8jrx.json")
+lottie_json = load_lottieurl("https://lottie.host/f00c9014-fef2-4a44-8ccf-93e5d7d0cc6e/7TBG3gzdcO.json")
 
 # --- Sidebar Theme Switch ---
 theme = st.sidebar.radio("Choose Theme", ("🌞 Light", "🌙 Dark"))
@@ -35,7 +38,10 @@ else:
 
 # --- Header Section ---
 st.markdown(f"<h1 style='color:{text_color}; text-align:center;'>🍓 FreshScore Predictor – ColdChain AI</h1>", unsafe_allow_html=True)
-st_lottie(lottie_json, height=200, key="coldchain")
+if lottie_json:
+    st_lottie(lottie_json, height=200, key="coldchain")
+else:
+    st.warning("⚠️ Animation failed to load. Please check your internet or try again later.")
 
 # --- Layout Columns ---
 left, right = st.columns([1, 1.2])
@@ -132,3 +138,4 @@ if submitted:
 
         This score helps cold chain operators, retailers, and quality controllers make **real-time decisions** based on AI-powered predictions.
         """)
+
